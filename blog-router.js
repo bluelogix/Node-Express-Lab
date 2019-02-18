@@ -68,21 +68,21 @@ router.get('/:id', (req, res) => {
 // return the following JSON object: { error: "There was an error while saving the post to the database" }.
 
 router.post('/', (req, res) => {
-   const { title, content } = req.body;
+   const { title, contents } = req.body;
    
-    if (!title && !content ) {
+    if (!title || !contents ) {
         res.status(400).json({errorMessage: 'Please provide title and contents for the post'});
     } else {
-        db.insert({ title, content })
-        .then(posts => {
-        res.status(201).json({ success: true, posts });
+        db.insert({ title, contents })
+        .then(post => {
+        res.status(201).json( post );
     })
     .catch(err  => {
         res.status(500).json({ 
-            success: false, error: 'There was an error while saving the post to the database'
-        });
-    })
-}
+             error: 'There was an error while saving the post to the database'
+            });
+        })
+    }
 });
 
 // Delete 
@@ -102,8 +102,8 @@ router.delete('/:id', (req, res) => {
 
     db.
     remove(id)
-    .then(posts => {
-        if (posts) {
+    .then(post => {
+        if (post) {
             res.status(204).end();
         } else {
             res.status(404).json({ success: false, message: "The post with the specified ID does not exist." });
@@ -137,5 +137,23 @@ router.delete('/:id', (req, res) => {
 // return the newly updated post.
 
 
+router.put('/:id', (req, res) => {
+    const { id } = req.params;
+    const changes = req.body;
 
+    db.update(id, changes)
+    .then(postUpdated => {
+        if( !postUpdated) {
+            res.status(404).json({ success: false, message: 'The post with the specified ID does not exist.' })
+        } else if ( !changes.title || !changes.contents ) {
+            return res.status(400).json({  success: false, errorMessage: 'Please provide title and contents for the post.' })
+
+        } else {
+            return res.status(200).json({ success: true, changes })
+        }
+    })
+    .catch(err => {
+        res.status(500).json({  success: false, error: 'The post information could not be modified'})
+    })
+})
 module.exports = router;
